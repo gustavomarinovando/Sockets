@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
+#include <time.h>
 
 int main(int argc, char *argv[]){
 
@@ -15,10 +15,15 @@ int main(int argc, char *argv[]){
     return -1;
   }
 
+  // Nombre del archivo a recibir
   char* fileName = argv[1];
 
+  // Numero de puerto
   int port = atoi(argv[2]);
+
+  // Tamaño del buffer
   int bufferSize = atoi(argv[3]);
+
   char* buffer = malloc(bufferSize);
 
   struct sockaddr_in stSockAddr;
@@ -59,7 +64,7 @@ int main(int argc, char *argv[]){
     }
 
   long fileSize;
-  int fsize = recv(ConnectFD, &fileSize, sizeof(fileSize),0);
+  int fsize = recv(ConnectFD, &fileSize, sizeof(fileSize), 0);
   if(fsize != sizeof(fileSize)) {
     printf("Error reading file size\n");
     exit(-1);
@@ -68,9 +73,29 @@ int main(int argc, char *argv[]){
 
   int totalBytesReceived = 0;
 
-  FILE* pFile = fopen(fileName, "wb");
+  FILE* pFile = fopen(fileName, "w+");
 
   // here ADD your code
+  int byt_rcv = 0, total_byt = 0, byps = 0;
+  float per, seconds, total_time, speed;
+  clock_t start = clock();
+  while (total_byt < fileSize) {
+    byt_rcv = recv(ConnectFD, buffer, bufferSize, 0);
+    clock_t end = clock();
+    fwrite(buffer, sizeof(char), byt_rcv, pFile);
+    total_byt += byt_rcv;
+    byps += byt_rcv;
+    per = ((float)((total_byt * 100) / fileSize));
+    seconds = ((float)(end - start) / CLOCKS_PER_SEC);
+    total_time += seconds;
+    if (total_time >= 1) {
+      speed = (byps / 1024) / total_time;
+      total_time = 0;
+      byps = 0;
+    }
+    printf("Elapsed time %.2f s\tVelocidad %.1f KB/s\tbytes %d\n", seconds, speed, total_byt);
+    printf("Expected: %d\tRead: %d\tPorcentaje %.2f %%\n", bufferSize, byt_rcv, per);
+  }
 
   fclose(pFile);
 
