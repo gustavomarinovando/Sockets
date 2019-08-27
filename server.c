@@ -76,8 +76,8 @@ int main(int argc, char *argv[]){
   FILE* pFile = fopen(fileName, "w+");
 
   // here ADD your code
-  int byt_rcv = 0, total_byt = 0, byps = 0;
-  float per, seconds, total_time, speed;
+  int per, byt_rcv = 0, total_byt = 0, byps = 0;
+  float seconds, total_time, speed;
   clock_t start = clock();
   while (total_byt < fileSize) {
     byt_rcv = recv(ConnectFD, buffer, bufferSize, 0);
@@ -90,11 +90,11 @@ int main(int argc, char *argv[]){
     total_time += seconds;
     if (total_time >= 1) {
       speed = (byps / 1024) / total_time;
+      printf("Elapsed time %.4f s\tVelocidad %.3f KB/s\tbytes %d\n", total_time, speed, total_byt);
+      printf("Expected: %d\tRead: %d\tPorcentaje %d %%\n", bufferSize, byt_rcv, per);
       total_time = 0;
       byps = 0;
     }
-    printf("Elapsed time %.2f s\tVelocidad %.1f KB/s\tbytes %d\n", seconds, speed, total_byt);
-    printf("Expected: %d\tRead: %d\tPorcentaje %.2f %%\n", bufferSize, byt_rcv, per);
   }
 
   fclose(pFile);
