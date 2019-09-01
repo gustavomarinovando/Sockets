@@ -1,0 +1,232 @@
+\documentclass[12pt, letterpaper]{article}
+\usepackage{fullpage}
+\usepackage[top=2cm, bottom=4.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage[toc,page]{appendix}
+\usepackage{listings}
+\usepackage{amsmath} % Advanced math typesetting
+\usepackage{amssymb}
+\usepackage[utf8]{inputenc} % Unicode support (Umlauts etc.)
+\usepackage[spanish,es-tabla]{babel} % Change hyphenation rules
+\decimalpoint
+\usepackage{hyperref} % Add a link to your document
+\usepackage{graphicx} % Add pictures to your document
+\usepackage{listings} % Source code formatting and highlighting
+\usepackage{blindtext}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{gensymb}
+\usepackage{enumitem}
+\usepackage{subcaption}
+\usepackage[table,xcdraw]{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx,ragged2e,booktabs,caption}
+\usepackage[cache=false]{minted}
+\usepackage{ragged2e}
+\usepackage{etoolbox}
+%\usepackage[T1]{fontenc}
+\usepackage{geometry}
+
+\hypersetup{colorlinks=true,urlcolor=blue}
+
+\definecolor{mGreen}{rgb}{0,0.6,0}
+\definecolor{mGray}{rgb}{0.5,0.5,0.5}
+\definecolor{mPurple}{rgb}{0.58,0,0.82}
+\definecolor{backgroundColour}{rgb}{0.95,0.95,0.92}
+
+\renewcommand{\labelitemi}{$\bullet$}
+
+\apptocmd{\frame}{}{\justifying}{}
+
+% Framed Box Minted
+%\usepackage{tcolorbox}
+%\usepackage{etoolbox}
+%\BeforeBeginEnvironment{minted}{\begin{tcolorbox}}%
+%\AfterEndEnvironment{minted}{\end{tcolorbox}}%
+
+\begin{document}
+	\begin{titlepage}
+		\begin{center}
+			\vspace*{2cm}
+			
+			\includegraphics[scale=0.12]{images/UPB.png}
+			\vfill
+			
+			\Huge{\textbf{TP4}}\\[5mm]
+			
+			\huge{\slshape{Teleinform\'atica}}
+			\vfill
+			
+			\line(1,0){360}\\[3mm]
+			\Huge{\textbf{Sockets}}\\[1mm] 
+			\line(1,0){360}\\[2cm]
+			\begin{center}
+				\Large{Gustavo Marin}
+				\\
+				\Large{Alejandro Coello}
+			\end{center}
+			
+			\vfill
+			\large{\today}
+		\end{center}
+	\end{titlepage}
+\section{Objetivo}
+\noindent Enviar un fichero entre dos computadoras utilizando un socket TCP.
+\section{Requerimientos}
+\noindent El servidor deberá calcular throughput (i.e., el número de kilobytes por segundo – KB/s) que recibió y el porcentaje bytes recibidos del total esperados. Para simplificar, se deberá utiliza una aproximación del tiempo entre varios recv(…) que sean mayores o iguales a 1 segundo
+
+\section{Implementaci\'on}
+\noindent En el servidor se obtiene el tamaño del fichero a recibir y se recibir\'an datos hasta alcanzar el tamaño del fichero, esto se realizara mediante un {\fontfamily{qcr}\selectfont\textbf{while}}, dentro el cual se tiene la recepci\'on de datos, la escritura en el fichero, un control del tiempo, el c\'alculo del porcentaje recibido y la impresi\'on de la velocidad de transmisi\'on y el porcentaje.
+\subsection{C\'alculo del porcentaje recibido}
+\noindent Para calcular el porcentaje recibido se realiza un divisi\'on entre la cantidad de bytes recibidos entre el total a recibir y se multiplica por 100
+\begin{minted}{c}
+per = ((total_byt * 100) / fileSize);
+\end{minted}
+\subsection{C\'alculo de la velocidad de transmisi\'on}
+\noindent Para calcular la velocidad de transmisi\'on se inicio la cuenta de un tiempo antes de entrar al ciclo {\fontfamily{qcr}\selectfont\textbf{while}} y al acabar la recepci\'on, este tiempo se ira acumulando y cuando sea mayor a 1 segundo se realizara la divisi\'on entre los bytes recibidos hasta ese momento entre el tiempo transcurrido.
+\begin{minted}{c}
+speed = (byps / 1000) / total_time;
+\end{minted}
+\subsection{Escritura del fichero}
+\noindent Para realizar la escritura del fichero se utiliza {\fontfamily{qcr}\selectfont\textbf{fwrite}}, se escribira sobre un fichero previamente creado con {\fontfamily{qcr}\selectfont\textbf{fopen}}.
+\begin{minted}{C}
+// Creacion del fichero
+FILE* pFile = fopen(fileName, "w+");
+// Escritura del fichero
+fwrite(buffer, sizeof(char), byt_rcv, pFile);
+\end{minted}
+
+\clearpage
+\section{Resultados}
+\noindent A continuaci\'on se adjuntaran im\'agenes de la aplicaci\'on funcionando.
+\\~\\
+En la siguiente imagen se muestra la ejecuci\'on del servidor con todos los requerimientos funcionando, adem\'as s se puede observar el formato de introducci\'on de argumentos, nombre del fichero, puerto y tamaño del buffer.
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.65\linewidth]{images/server}
+	\caption{Servidor}
+	\label{fig:server}
+\end{figure}
+\\En la siguiente imagen se muestra la ejecuci\'on del cliente, adem\'as del formato de la introducci\'on de argumentos, archivo a enviar, IP del servidor, puerto y tamaño del buffer.
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.65\linewidth]{images/client}
+	\caption{Cliente}
+	\label{fig:client}
+\end{figure}
+
+\clearpage
+%\section{Conclusiones}
+%\begin{itemize}
+%	\item La implementaci\'on del chat con el formato indicado fue exitosa.
+%	\item Nodejs es una herramienta muy \'util para el desarrollo de m\'ultiples aplicaciones.
+%	\item Los paquetes de javascript son muy \'utiles para el uso r\'adido de funciones espec\'ificas.
+%\end{itemize}
+\begin{appendices}
+\begin{minted}[obeytabs=true,tabsize=2, breaklines, breakanywhere]{C}
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <time.h>
+
+int main(int argc, char *argv[]){
+
+	if (argc != 4) {
+		printf("usage: %s fileName port bufferSize\n", argv[0]);
+		return -1;
+	}
+	
+	// Nombre del archivo a recibir
+	char* fileName = argv[1];
+	
+	// Numero de puerto
+	int port = atoi(argv[2]);
+	
+	// Tamaño del buffer
+	int bufferSize = atoi(argv[3]);
+	
+	char* buffer = malloc(bufferSize);
+	
+	struct sockaddr_in stSockAddr;
+	int SocketFD = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if(-1 == SocketFD) {
+		perror("can not create socket");
+		exit(EXIT_FAILURE);
+	}
+	
+	memset(&stSockAddr, 0, sizeof(struct sockaddr_in));
+	
+	stSockAddr.sin_family = AF_INET;
+	stSockAddr.sin_port = htons(port);
+	stSockAddr.sin_addr.s_addr = INADDR_ANY;
+	if(-1 == bind(SocketFD,(const struct sockaddr *)&stSockAddr, sizeof(struct sockaddr_in))) {
+		perror("error bind failed");
+		close(SocketFD);
+		exit(EXIT_FAILURE);
+	}
+	
+	if(-1 == listen(SocketFD, 10)) {
+		perror("error listen failed");
+		close(SocketFD);
+		exit(EXIT_FAILURE);
+	}
+	
+	int ConnectFD = accept(SocketFD, NULL, NULL);
+	
+	if(0 > ConnectFD) {
+		perror("error accept failed");
+		close(SocketFD);
+		exit(EXIT_FAILURE);
+	}
+	
+	long fileSize;
+	int fsize = recv(ConnectFD, &fileSize, sizeof(fileSize), 0);
+	if(fsize != sizeof(fileSize)) {
+		printf("Error reading file size\n");
+		exit(-1);
+	}
+	printf("Trying to receive %ld Bytes...\n", fileSize);
+	
+	int totalBytesReceived = 0;
+	
+	FILE* pFile = fopen(fileName, "w+");
+	// here ADD your code
+	int per, byt_rcv = 0, total_byt = 0, byps = 0;
+	float seconds, total_time, speed;
+	clock_t start = clock();
+		while (total_byt < fileSize) {  	
+		byt_rcv = recv(ConnectFD, buffer, bufferSize, 0);    
+		fwrite(buffer, sizeof(char), byt_rcv, pFile);
+		clock_t end = clock();
+		total_byt += byt_rcv;
+		byps += byt_rcv;
+		per = ((total_byt * 100) / fileSize);
+		seconds = ((float)(end - start) / CLOCKS_PER_SEC);
+		total_time += seconds;
+		if (total_time >= 1) {
+			speed = (byps / 1000) / total_time;
+			printf("Elapsed time %.4f s\tVelocidad %.3f KB/s\tbytes %d\n", total_time, speed, total_byt);
+			printf("Expected: %d\tRead: %d\tPorcentaje %d %%\n", bufferSize, byt_rcv, per);
+			total_time = 0;
+			byps = 0;
+		}	
+	}
+	
+	fclose(pFile);
+	
+	printf("%s written\nDONE\n", fileName);
+	
+	shutdown(ConnectFD, SHUT_RDWR);
+	
+	close(ConnectFD);
+	close(SocketFD);
+	
+	return 0;
+}
+\end{minted}
+\end{appendices}
+\end{document}
